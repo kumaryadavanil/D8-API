@@ -1,0 +1,69 @@
+<?php
+
+/**
+ * @file
+ * Contains custom_api.module.
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_help().
+ */
+function custom_api_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    // Main module help for the custom_api module.
+    case 'help.page.custom_api':
+      $output = '';
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('Expose Page Content Type Node Using API Key') . '</p>';
+      return $output;
+
+    default:
+  }
+}
+
+
+/**
+ * Implements hook_form_alter()
+ */
+function custom_api_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id){
+  if($form_id == 'system_site_information_settings'){
+    $site_config = \Drupal::config('system.site');
+    $site_api_key = $site_config->get('siteapikey');
+    // Display default value if API key is not set yet
+    if (!empty($site_api_key)) {
+      $form['actions']['submit']['#value'] = t('Update Configuration');
+    }
+    $form['site_api'] = [
+      '#type' => 'details',
+      '#title' => t('Site API Details'),
+      '#open' => TRUE,
+    ];
+    $form['site_api']['siteapikey'] = [
+      '#type' => 'textfield',
+      '#title' => t('Site API Key'),
+      '#default_value' => $site_api_key,
+      '#attributes' => array('placeholder'=>t('No API Key yet'))
+    ];
+    $form['actions']['submit']['#submit'][] = 'custom_api_system_site_information_settings_submit';
+  }
+}
+
+
+/**
+ * Submit Callback for Saving Site API key
+ * @param $form
+ * @param FormStateInterface $form_state
+ */
+function custom_api_system_site_information_settings_submit($form, \Drupal\Core\Form\FormStateInterface $form_state){
+  $site_api_key = $form_state->getValue('siteapikey');
+  // Save data if there is valid API key
+  $site_api_key = trim($site_api_key);
+  \Drupal::configFactory()->getEditable('system.site')
+    ->set('siteapikey', $site_api_key)
+    ->save();
+  if($site_api_key != ''){
+    drupal_set_message(t('Site API key has been saved @site_api_key.', array('@site_api_key' => $site_api_key)));
+  }
+}

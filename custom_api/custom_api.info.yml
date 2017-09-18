@@ -1,0 +1,8 @@
+name: Custom API
+type: module
+description: Expose Page Content Type Node Using API Key
+core: 8.x
+package: Custom
+dependencies:
+  - rest
+  - restui
